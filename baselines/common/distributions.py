@@ -77,6 +77,8 @@ class MultiCategoricalPdType(PdType):
     def sample_dtype(self):
         return tf.int32
 
+    
+#return DiagGaussianPdType(ac_space.shape[0]) should be 3 in our experiment    
 class DiagGaussianPdType(PdType):
     def __init__(self, size):
         self.size = size
