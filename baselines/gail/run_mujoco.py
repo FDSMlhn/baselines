@@ -100,7 +100,7 @@ def main(args):
               args.save_per_iter,
               args.checkpoint_dir,
               args.log_dir,
-              args.pretrained,
+              args.pretrained, #false
               args.BC_max_iter,
               task_name
               )
@@ -139,12 +139,13 @@ def train(env, seed, policy_fn, reward_giver, dataset, algo,
         set_global_seeds(workerseed)
         env.seed(workerseed)
         trpo_mpi.learn(env, policy_fn, reward_giver, dataset, rank,
-                       pretrained=pretrained, pretrained_weight=pretrained_weight,
-                       g_step=g_step, d_step=d_step,
-                       entcoeff=policy_entcoeff,
-                       max_timesteps=num_timesteps,
-                       ckpt_dir=checkpoint_dir, log_dir=log_dir,
-                       save_per_iter=save_per_iter,
+                       pretrained=pretrained, pretrained_weight=pretrained_weight, #no pretrain
+                       g_step=g_step, d_step=d_step,       #'--g_step', help='number of steps to train policy in each epoch', type=int, default=3)
+                                                           #'--d_step', help='number of steps to train discriminator in each epoch', type=int, default=1)
+                       entcoeff=policy_entcoeff, #default=0
+                       max_timesteps=num_timesteps, #'number of timesteps per episode', type=int, default=5e6)
+                       ckpt_dir=checkpoint_dir, log_dir=log_dir, #'the directory to save log file', default='log')
+                       save_per_iter=save_per_iter, #'save model every xx iterations', type=int, default=100)
                        timesteps_per_batch=1024,
                        max_kl=0.01, cg_iters=10, cg_damping=0.1,
                        gamma=0.995, lam=0.97,
