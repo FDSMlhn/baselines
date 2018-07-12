@@ -13,6 +13,7 @@ def logsigmoid(a):
     return -tf.nn.softplus(-a)
 
 """ Reference: https://github.com/openai/imitation/blob/99fbccf3e060b6e6c739bdf209758620fcdefd3c/policyopt/thutil.py#L48-L51"""
+# use logits to compute the entropy of corresponding bernoulli
 def logit_bernoulli_entropy(logits):
     ent = (1.-tf.nn.sigmoid(logits))*logits - logsigmoid(logits)
     return ent
@@ -25,6 +26,7 @@ class TransitionClassifier(object):
         self.input_shape = tuple([o+a for o, a in zip(self.observation_shape, self.actions_shape)])
         self.num_actions = env.action_space.shape[0]
         self.hidden_size = hidden_size
+        # Prepare placeholder
         self.build_ph()
         # Build grpah
         generator_logits = self.build_graph(self.generator_obs_ph, self.generator_acs_ph, reuse=False)
@@ -40,7 +42,7 @@ class TransitionClassifier(object):
         expert_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=expert_logits, labels=tf.ones_like(expert_logits))
         expert_loss = tf.reduce_mean(expert_loss)
         # Build entropy loss
-        logits = tf.concat([generator_logits, expert_logits], 0)
+        logits = tf.concat([generator_logits, expert_logits], 0) . #2n * 1
         entropy = tf.reduce_mean(logit_bernoulli_entropy(logits))
         entropy_loss = -entcoeff*entropy
         # Loss + Accuracy terms
@@ -53,6 +55,7 @@ class TransitionClassifier(object):
         self.lossandgrad = U.function([self.generator_obs_ph, self.generator_acs_ph, self.expert_obs_ph, self.expert_acs_ph],
                                       self.losses + [U.flatgrad(self.total_loss, var_list)])
 
+        
     def build_ph(self):
         self.generator_obs_ph = tf.placeholder(tf.float32, (None, ) + self.observation_shape, name="observations_ph")
         self.generator_acs_ph = tf.placeholder(tf.float32, (None, ) + self.actions_shape, name="actions_ph")
@@ -60,10 +63,12 @@ class TransitionClassifier(object):
         self.expert_acs_ph = tf.placeholder(tf.float32, (None, ) + self.actions_shape, name="expert_actions_ph")
 
     def build_graph(self, obs_ph, acs_ph, reuse=False):
+        #self.scope is adversary
         with tf.variable_scope(self.scope):
             if reuse:
                 tf.get_variable_scope().reuse_variables()
-
+            #adversary/obfilter
+            
             with tf.variable_scope("obfilter"):
                 self.obs_rms = RunningMeanStd(shape=self.observation_shape)
             obs = (obs_ph - self.obs_rms.mean / self.obs_rms.std)
