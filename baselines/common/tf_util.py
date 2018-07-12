@@ -199,14 +199,17 @@ class _Function(object):
 
 def var_shape(x):
     out = x.get_shape().as_list()
+    #TensorShape([Dimension(1)]) -> [1]
     assert all(isinstance(a, int) for a in out), \
         "shape function assumes that shape is fully known"
     return out
 
 def numel(x):
+    #compute how many element in x
     return intprod(var_shape(x))
 
 def intprod(x):
+    #Return the product of array elements over a given axis.
     return int(np.prod(x))
 
 def flatgrad(loss, var_list, clip_norm=None):
